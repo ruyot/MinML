@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  # Main compression service
+  compression-api:
+    build: .
+    container_name: minimal-compression-api
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LOCAL_MODEL_URL=http://local-model:8001
+      - TOKENIZER_PATH=/app/models/custom_tokenizer
+      - COMPRESSION_LEVEL=2
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    depends_on:
+      - local-model
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Local model server (using Hugging Face text-generation-inference)
+  local-model:
+    image: ghcr.io/huggingface/text-generation-inference:1.4
+    container_name: minimal-local-model
+    ports:
+      - "8001:80"
+    environment:
+      - MODEL_ID=microsoft/DialoGPT-medium
+      - MAX_CONCURRENT_REQUESTS=128
+      - MAX_BEST_OF=2
+      - MAX_STOP_SEQUENCES=4
+      - MAX_INPUT_LENGTH=1024
+      - MAX_TOTAL_TOKENS=2048
+    volumes:
+      - hf_cache:/data
+    shm_size: 1g
+    restart: unless-stopped
+    # Uncomment if you have GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # Alternative: Use a simpler local model with Ollama
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: minimal-ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   restart: unless-stopped
+  #   # Uncomment if you have GPU support
+  #   # deploy:
+  #   #   resources:
+  #   #     reservations:
+  #   #       devices:
+  #   #         - driver: nvidia
+  #   #           count: 1
+  #   #           capabilities: [gpu]
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: minimal-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # Monitoring with Prometheus (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: minimal-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Grafana for dashboards (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: minimal-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+volumes:
+  hf_cache:
+    driver: local
+  # ollama_data:
+  #   driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  default:
+    name: minimal-network 

@@ -1,0 +1,253 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    name: Code Linting
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black isort mypy
+        pip install -r requirements.txt
+    
+    - name: Lint with flake8
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
+    
+    - name: Check code formatting with black
+      run: |
+        black --check --diff .
+    
+    - name: Check import sorting with isort
+      run: |
+        isort --check-only --diff .
+    
+    - name: Type checking with mypy
+      run: |
+        mypy --ignore-missing-imports --no-strict-optional tokenizer/ compression/ middleware/
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9, '3.10', '3.11']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt')"
+    
+    - name: Run tests with pytest
+      run: |
+        pytest tests/ -v --cov=compression --cov=tokenizer --cov=middleware --cov-report=xml --cov-report=html
+    
+    - name: Upload coverage to Codecov
+      if: matrix.python-version == '3.9'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety bandit
+        pip install -r requirements.txt
+    
+    - name: Run safety check
+      run: |
+        safety check
+    
+    - name: Run bandit security check
+      run: |
+        bandit -r . -f json -o bandit-report.json
+    
+    - name: Upload bandit report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: bandit-report
+        path: bandit-report.json
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt')"
+    
+    - name: Start FastAPI service
+      run: |
+        uvicorn middleware.main:app --host 0.0.0.0 --port 8000 &
+        sleep 10
+    
+    - name: Test API endpoints
+      run: |
+        # Health check
+        curl -f http://localhost:8000/health
+        
+        # Test compression endpoint
+        curl -X POST "http://localhost:8000/compress" \
+          -H "Content-Type: application/json" \
+          -d '{"text": "Test compression", "compression_level": 2}'
+        
+        # Test evaluation endpoint
+        curl -X POST "http://localhost:8000/evaluate" \
+          -H "Content-Type: application/json" \
+          -d '{"texts": ["Test text for evaluation"], "compression_level": 2}'
+
+  build-docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [lint, test, security]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build Docker image
+      run: |
+        docker build -t minimal-compression:${{ github.sha }} .
+    
+    - name: Test Docker container
+      run: |
+        # Run container in background
+        docker run -d -p 8000:8000 --name test-container minimal-compression:${{ github.sha }}
+        sleep 15
+        
+        # Test health endpoint
+        curl -f http://localhost:8000/health
+        
+        # Clean up
+        docker stop test-container
+        docker rm test-container
+    
+    - name: Login to Docker Hub
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    
+    - name: Push to Docker Hub
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        docker tag minimal-compression:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/minimal-compression:latest
+        docker tag minimal-compression:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/minimal-compression:${{ github.sha }}
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/minimal-compression:latest
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/minimal-compression:${{ github.sha }}
+
+  performance-test:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install psutil
+        python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt')"
+    
+    - name: Run performance benchmarks
+      run: |
+        python scripts/benchmark.py --quick --fail-on-threshold --output performance-results.json
+        cat performance-results.json
+    
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-results
+        path: performance-results.json
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [integration-test, build-docker, performance-test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to production
+      run: |
+        echo "Deployment would happen here"
+        echo "Docker image: minimal-compression:${{ github.sha }}"
+        # Add your deployment commands here
+        # For example: kubectl apply -f k8s/ or docker-compose pull && docker-compose up -d
+
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    if: always()
+    
+    steps:
+    - name: Clean up temporary artifacts
+      run: |
+        echo "Cleaning up temporary files and artifacts" 
