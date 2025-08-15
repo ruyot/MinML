@@ -1,7 +1,7 @@
 """
 GPT-OSS Integration for Intelligent Compression
 
-This module integrates GPT-OSS to provide:
+This module integrates local GPT-OSS models to provide:
 1. Semantic quality assessment of compression
 2. Intelligent compression strategy selection
 3. Context-aware compression optimization
@@ -15,11 +15,13 @@ from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
 
+# Local model imports
 try:
-    import openai
-    OPENAI_AVAILABLE = True
+    import torch
+    from transformers import AutoTokenizer, AutoModelForCausalLM
+    LOCAL_MODELS_AVAILABLE = True
 except ImportError:
-    OPENAI_AVAILABLE = False
+    LOCAL_MODELS_AVAILABLE = False
 
 from .base import BaseCompressor
 
@@ -28,9 +30,8 @@ class CompressionStrategy(Enum):
     """Available compression strategies."""
     CONSERVATIVE = "conservative"  # Preserve maximum meaning
     BALANCED = "balanced"         # Balance compression vs quality
-    AGGRESSIVE = "aggressive"     # Maximum compression
+    AGGRESSIVE = "aggressive"     # Maximum compression (Level 3)
     SEMANTIC = "semantic"         # GPT-OSS optimized
-    DOMAIN_SPECIFIC = "domain"    # Industry-specific optimization
 
 
 @dataclass
@@ -43,6 +44,16 @@ class SemanticAnalysis:
     lost_concepts: List[str]
     compression_quality_score: float  # 0.0 to 1.0
     recommendations: List[str]
+
+
+@dataclass
+class CompressionComparison:
+    """Comparison of compressed vs uncompressed text."""
+    original_text: str
+    compressed_text: str
+    compression_stats: Dict[str, Any]
+    semantic_analysis: SemanticAnalysis
+    recommendation: str
 
 
 @dataclass
@@ -62,28 +73,47 @@ class GPTOSSIntegration:
     """
     
     def __init__(self, 
-                 api_key: Optional[str] = None,
-                 model: str = "gpt-4",
+                 local_model_path: str = "models/gpt_oss/llama-2-7b",
                  enable_analysis: bool = True,
                  enable_optimization: bool = True):
         """
-        Initialize GPT-OSS integration.
+        Initialize GPT-OSS integration with local model.
         
         Args:
-            api_key: OpenAI API key (or from environment)
-            model: GPT model to use for analysis
+            local_model_path: Path to local GPT-OSS model
             enable_analysis: Enable semantic quality analysis
             enable_optimization: Enable compression optimization
         """
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        self.model = model
-        self.enable_analysis = enable_analysis and OPENAI_AVAILABLE and self.api_key
+        self.local_model_path = local_model_path
+        self.enable_analysis = enable_analysis and LOCAL_MODELS_AVAILABLE
         self.enable_optimization = enable_optimization and self.enable_analysis
+        
+        # Initialize local model
+        self.local_model = None
+        self.local_tokenizer = None
+        if self.enable_analysis:
+            self._load_local_model()
         
         # AI Dictionary for storing learned compression patterns
         self.ai_dictionary: Dict[str, AIDictionaryEntry] = {}
         self.dictionary_path = "models/ai_compression_dictionary.json"
         self._load_ai_dictionary()
+    
+    def _load_local_model(self):
+        """Load local GPT-OSS model from disk."""
+        try:
+            print(f"Loading local GPT-OSS model from {self.local_model_path}")
+            self.local_tokenizer = AutoTokenizer.from_pretrained(self.local_model_path)
+            self.local_model = AutoModelForCausalLM.from_pretrained(
+                self.local_model_path,
+                device_map="auto" if torch.cuda.is_available() else "cpu",
+                torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
+            )
+            print("✅ Local GPT-OSS model loaded successfully")
+        except Exception as e:
+            print(f"❌ Failed to load local model: {e}")
+            self.local_model = None
+            self.local_tokenizer = None
     
     def _load_ai_dictionary(self):
         """Load AI dictionary from file if it exists."""
@@ -115,6 +145,44 @@ class GPTOSSIntegration:
         except Exception as e:
             print(f"Warning: Could not save AI dictionary: {e}")
     
+    async def _query_local_model(self, prompt: str, max_tokens: int = 500) -> str:
+        """Query local GPT-OSS model with prompt."""
+        if not self.local_model or not self.local_tokenizer:
+            raise Exception("Local GPT-OSS model not loaded")
+        
+        try:
+            # Format prompt for the model
+            if "llama" in self.local_model_path.lower():
+                formatted_prompt = f"[INST] {prompt} [/INST]"
+            elif "mistral" in self.local_model_path.lower():
+                formatted_prompt = f"<s>[INST] {prompt} [/INST]"
+            else:
+                formatted_prompt = prompt
+            
+            # Tokenize and generate
+            inputs = self.local_tokenizer(formatted_prompt, return_tensors="pt")
+            
+            with torch.no_grad():
+                outputs = self.local_model.generate(
+                    **inputs,
+                    max_new_tokens=max_tokens,
+                    temperature=0.1,
+                    do_sample=True,
+                    pad_token_id=self.local_tokenizer.eos_token_id
+                )
+            
+            # Decode response
+            response = self.local_tokenizer.decode(outputs[0], skip_special_tokens=True)
+            
+            # Remove the input prompt from response
+            response = response.replace(formatted_prompt, "").strip()
+            
+            return response
+            
+        except Exception as e:
+            print(f"Local model query failed: {e}")
+            raise
+    
     async def analyze_compression_quality(self, 
                                         original: str, 
                                         compressed: str,
@@ -134,8 +202,6 @@ class GPTOSSIntegration:
             return self._default_analysis(original, compressed)
         
         try:
-            client = openai.OpenAI(api_key=self.api_key)
-            
             prompt = f"""
             Analyze the semantic quality of text compression.
             
@@ -165,18 +231,16 @@ class GPTOSSIntegration:
             }}
             """
             
-            response = await asyncio.to_thread(
-                client.chat.completions.create,
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=500
-            )
+            response = await self._query_local_model(prompt, max_tokens=500)
             
-            content = response.choices[0].message.content
-            analysis_data = json.loads(content)
-            
-            return SemanticAnalysis(**analysis_data)
+            # Parse JSON response
+            try:
+                analysis_data = json.loads(response)
+                return SemanticAnalysis(**analysis_data)
+            except json.JSONDecodeError:
+                # Fallback if JSON parsing fails
+                print(f"Failed to parse JSON response: {response}")
+                return self._default_analysis(original, compressed)
             
         except Exception as e:
             print(f"GPT-OSS analysis failed: {e}")
@@ -204,6 +268,70 @@ class GPTOSSIntegration:
             recommendations=["Enable GPT-OSS for detailed analysis"]
         )
     
+    async def compare_compression_vs_uncompressed(self,
+                                                text: str,
+                                                context: Optional[str] = None) -> CompressionComparison:
+        """
+        Compare compressed vs uncompressed text using GPT-OSS analysis.
+        
+        Args:
+            text: Original text to analyze
+            context: Context for compression
+            
+        Returns:
+            CompressionComparison with analysis
+        """
+        if not self.enable_analysis:
+            return self._default_comparison(text)
+        
+        try:
+            # Create a simple compressed version for comparison
+            # This simulates what the compression pipeline would do
+            words = text.split()
+            compressed_words = [word for word in words if len(word) > 3]  # Simple compression
+            compressed_text = " ".join(compressed_words)
+            
+            # Analyze compression quality
+            analysis = await self.analyze_compression_quality(text, compressed_text, context)
+            
+            # Generate recommendation
+            if analysis.compression_quality_score > 0.8:
+                recommendation = "Compression recommended - high quality preservation"
+            elif analysis.compression_quality_score > 0.6:
+                recommendation = "Compression acceptable - moderate quality preservation"
+            else:
+                recommendation = "Compression not recommended - significant quality loss"
+            
+            # Basic compression stats
+            compression_stats = {
+                "original_length": len(text),
+                "compressed_length": len(compressed_text),
+                "compression_ratio": len(compressed_text) / len(text),
+                "words_removed": len(words) - len(compressed_words)
+            }
+            
+            return CompressionComparison(
+                original_text=text,
+                compressed_text=compressed_text,
+                compression_stats=compression_stats,
+                semantic_analysis=analysis,
+                recommendation=recommendation
+            )
+            
+        except Exception as e:
+            print(f"Compression comparison failed: {e}")
+            return self._default_comparison(text)
+    
+    def _default_comparison(self, text: str) -> CompressionComparison:
+        """Default comparison when GPT-OSS is unavailable."""
+        return CompressionComparison(
+            original_text=text,
+            compressed_text=text,
+            compression_stats={"error": "GPT-OSS not available"},
+            semantic_analysis=self._default_analysis(text, text),
+            recommendation="Enable GPT-OSS for detailed analysis"
+        )
+    
     async def optimize_compression_strategy(self,
                                           text: str,
                                           target_compression_ratio: float = 0.7,
@@ -223,8 +351,6 @@ class GPTOSSIntegration:
             return self._default_strategy()
         
         try:
-            client = openai.OpenAI(api_key=self.api_key)
-            
             prompt = f"""
             Analyze this text and recommend optimal compression strategy.
             
@@ -257,18 +383,14 @@ class GPTOSSIntegration:
             }}
             """
             
-            response = await asyncio.to_thread(
-                client.chat.completions.create,
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=400
-            )
+            response = await self._query_local_model(prompt, max_tokens=400)
             
-            content = response.choices[0].message.content
-            strategy_data = json.loads(content)
-            
-            return strategy_data
+            try:
+                strategy_data = json.loads(response)
+                return strategy_data
+            except json.JSONDecodeError:
+                print(f"Failed to parse strategy JSON: {response}")
+                return self._default_strategy()
             
         except Exception as e:
             print(f"GPT-OSS optimization failed: {e}")
@@ -277,15 +399,15 @@ class GPTOSSIntegration:
     def _default_strategy(self) -> Dict[str, Any]:
         """Default compression strategy when GPT-OSS is unavailable."""
         return {
-            "compression_level": 2,
+            "compression_level": 3,  # Default to Level 3 for analysis
             "compressor_settings": {
                 "stop_word_remover": {"preserve_structure": True},
-                "keyword_extractor": {"max_keywords": 10},
-                "shorthand_compressor": {"remove_spaces": False}
+                "keyword_extractor": {"max_keywords": 8},
+                "shorthand_compressor": {"remove_spaces": True}
             },
             "preserve_terms": [],
             "compress_terms": [],
-            "reasoning": "Default balanced strategy"
+            "reasoning": "Default Level 3 strategy for maximum compression"
         }
     
     async def generate_ai_dictionary_entry(self,
@@ -307,8 +429,6 @@ class GPTOSSIntegration:
             return self._create_basic_entry(term, context, compressed_form)
         
         try:
-            client = openai.OpenAI(api_key=self.api_key)
-            
             prompt = f"""
             Analyze this compression mapping and provide feedback.
             
@@ -329,35 +449,33 @@ class GPTOSSIntegration:
             }}
             """
             
-            response = await asyncio.to_thread(
-                client.chat.completions.create,
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=200
-            )
+            response = await self._query_local_model(prompt, max_tokens=200)
             
-            content = response.choices[0].message.content
-            analysis = json.loads(content)
-            
-            # Use improved compression if suggested
-            final_compression = analysis.get("improved_compression", compressed_form)
-            confidence = analysis.get("confidence", 0.8)
-            
-            entry = AIDictionaryEntry(
-                term=term,
-                compressed_form=final_compression,
-                context=context,
-                confidence=confidence,
-                usage_count=1,
-                last_updated="2024-01-01"
-            )
-            
-            # Store in dictionary
-            self.ai_dictionary[term] = entry
-            self._save_ai_dictionary()
-            
-            return entry
+            try:
+                analysis = json.loads(response)
+                
+                # Use improved compression if suggested
+                final_compression = analysis.get("improved_compression", compressed_form)
+                confidence = analysis.get("confidence", 0.8)
+                
+                entry = AIDictionaryEntry(
+                    term=term,
+                    compressed_form=final_compression,
+                    context=context,
+                    confidence=confidence,
+                    usage_count=1,
+                    last_updated="2024-01-01"
+                )
+                
+                # Store in dictionary
+                self.ai_dictionary[term] = entry
+                self._save_ai_dictionary()
+                
+                return entry
+                
+            except json.JSONDecodeError:
+                print(f"Failed to parse dictionary JSON: {response}")
+                return self._create_basic_entry(term, context, compressed_form)
             
         except Exception as e:
             print(f"GPT-OSS dictionary generation failed: {e}")

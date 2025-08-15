@@ -22,13 +22,15 @@ async def test_gpt_oss_integration():
     print("GPT-OSS INTEGRATION TESTING")
     print("=" * 60)
     
-    # Initialize GPT-OSS integration
+    # Initialize GPT-OSS integration with local model
     gpt_oss = GPTOSSIntegration(
+        local_model_path="models/gpt_oss/llama-2-7b",  # Update this path to your model
         enable_analysis=True,
         enable_optimization=True
     )
     
     print(f"GPT-OSS enabled: {gpt_oss.enable_analysis}")
+    print(f"Local model path: {gpt_oss.local_model_path}")
     print(f"Optimization enabled: {gpt_oss.enable_optimization}")
     
     # Test text
