@@ -129,23 +129,136 @@ dmypy.json
 .pyre/
 
 # GPT-OSS Models (large files - don't commit)
+models/
 models/gpt_oss/
+models/gpt-oss/
 models/*.bin
 models/*.safetensors
 models/*.json
 models/*.txt
+models/*.safetensors.index.json
 
 # Model cache
+.cache/
 .cache/huggingface/
 .cache/torch/
+*.cache/
 
 # AI Dictionary files
 models/ai_compression_dictionary.json
+models/models/
+models/gpt-oss/
+models/gpt_oss/
 
-# Logs
+# Rust build artifacts
+crates/*/target/
+crates/*/Cargo.lock
+target/
+
+# Python virtual environments (expanded)
+.venv/
+venv/
+env/
+ENV/
+.env/
+.venv/
+.virtualenv/
+.virtualenv*/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.stackdump
+
+# Test artifacts and temporary files
+test_*.py
+simple_*.py
+*.tmp
+*.temp
+.tmp/
+temp/
+.tmp
+
+# Logs (expanded)
 *.log
 logs/
+*.log.*
+log.txt
 
-# Temporary files
-*.tmp
-*.temp 
+# Docker volumes and data
+docker-data/
+data/cache/
+data/temp/
+
+# Maturin build artifacts
+*.whl
+*.tar.gz
+build/
+dist/
+*.so
+*.pyd
+
+# CUDA/GPU cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Node.js (if any JS components added)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs* 

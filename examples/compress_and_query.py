@@ -57,11 +57,17 @@ def demonstrate_compression(pipeline: CompressionPipeline, text: str):
     # Show step-by-step compression
     print("\nStep-by-step compression:")
     for i, step in enumerate(stats['steps'], 1):
-        print(f"  Step {i} ({step['compressor']}):")
-        print(f"    {step['space_saved_percent']:.1f}% character reduction")
-        if 'tokens_before' in step and 'tokens_after' in step:
-            token_reduction = ((step['tokens_before'] - step['tokens_after']) / step['tokens_before'] * 100) if step['tokens_before'] > 0 else 0
-            print(f"    {token_reduction:.1f}% token reduction")
+        if 'name' in step:
+            print(f"  Step {i} ({step['name']}):")
+            if 'input' in step and 'output' in step:
+                input_len = len(step['input'])
+                output_len = len(step['output'])
+                reduction = ((input_len - output_len) / input_len * 100) if input_len > 0 else 0
+                print(f"    {reduction:.1f}% character reduction")
+        elif 'final' in step:
+            print(f"  Final result: {step['final']}")
+        else:
+            print(f"  Step {i}: {step}")
     
     # Attempt decompression
     decompressed = pipeline.decompress(result['compressed'])

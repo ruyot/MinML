@@ -73,7 +73,7 @@ class GPTOSSIntegration:
     """
     
     def __init__(self, 
-                 local_model_path: str = "models/gpt_oss/llama-2-7b",
+                 local_model_path: str = "models/gpt-oss/gpt-oss-20b",
                  enable_analysis: bool = True,
                  enable_optimization: bool = True):
         """

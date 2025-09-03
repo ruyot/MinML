@@ -24,7 +24,7 @@ async def test_gpt_oss_integration():
     
     # Initialize GPT-OSS integration with local model
     gpt_oss = GPTOSSIntegration(
-        local_model_path="models/gpt_oss/llama-2-7b",  # Update this path to your model
+        local_model_path="models/gpt-oss/gpt-oss-20b",  # Updated to use GPT-OSS 20B
         enable_analysis=True,
         enable_optimization=True
     )
