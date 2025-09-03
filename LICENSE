@@ -1,0 +1,49 @@
+View Only License
+
+Copyright (c) 2024 MinML Team
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software solely for the purpose of viewing and reading the source code.
+
+RESTRICTIONS AND LIMITATIONS:
+
+1. USAGE RESTRICTION: You may NOT use, execute, run, or otherwise utilize
+   the Software in any manner, including but not limited to:
+   - Running the software on any system
+   - Using the software's functionality
+   - Integrating the software into other projects
+   - Using the software in production environments
+
+2. MODIFICATION RESTRICTION: You may NOT modify, adapt, alter, or create
+   derivative works based on the Software in any way.
+
+3. DISTRIBUTION RESTRICTION: You may NOT distribute, publish, sublicense,
+   or otherwise make available the Software to any third party.
+
+4. COMMERCIAL RESTRICTION: Commercial use of the Software is strictly
+   prohibited without explicit written permission from the copyright holder.
+
+5. PATENT RESTRICTION: No patent licenses are granted under this license.
+
+PERMITTED ACTIVITIES:
+- Viewing and reading the source code
+- Educational purposes limited to understanding the code structure
+- Personal study and analysis
+
+FOR COMMERCIAL USAGE:
+If you wish to use, modify, or distribute this software commercially,
+please contact the MinML team at team@minml.ai to discuss licensing options.
+
+DISCLAIMER:
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+This license is designed to protect the intellectual property while allowing
+educational access to the codebase. For any questions regarding this license,
+please contact team@minml.ai.

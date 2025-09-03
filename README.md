@@ -4,6 +4,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://python.org)
 [![Rust Version](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://rust-lang.org)
+[![License: View Only](https://img.shields.io/badge/License-View%20Only-red.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-27%20passed-brightgreen.svg)](tests/)
 
 ## Key Features
@@ -476,7 +477,16 @@ pytest examples/test_gpt_oss_integration.py -v
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the View Only License - see the LICENSE file for details.
+
+**View Only License Terms:**
+- ✅ **Viewing**: You may view and read the source code
+- ❌ **Usage**: You may not use, modify, or distribute this software
+- ❌ **Commercial Use**: Commercial usage is strictly prohibited
+- ❌ **Modification**: No modifications or derivative works allowed
+- ❌ **Distribution**: No redistribution in any form
+
+For commercial licensing or usage permissions, please contact the MinML team.
 
 ## 🙏 Acknowledgments
 
@@ -485,6 +495,12 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **OpenAI**: For GPT-OSS model architecture
 - **Python Community**: For the comprehensive ML ecosystem
 
+## 📞 Contact
+
+For licensing inquiries, commercial partnerships, or questions about MinML:
+- **Email**: team@minml.ai
+- **GitHub**: [MinML Organization](https://github.com/minml)
+
 ---
 
-**MinML** - Where Rust meets AI for lightning-fast compression! ⚡🤖 
+**MinML** - High-performance semantic compression with enterprise-grade restrictions ⚡🤖 
