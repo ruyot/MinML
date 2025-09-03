@@ -1,27 +1,31 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["setuptools>=61.0", "wheel", "maturin>=1.0,<2.0"]
+build-backend = "maturin"
 
 [project]
-name = "minimal-compression"
+name = "minml"
 version = "1.0.0"
-description = "Semantic compression layer for LLM prompts and responses"
+description = "High-performance semantic compression for LLMs with Rust core"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Minimal Team", email = "team@minimal.ai"}
+    {name = "MinML Team", email = "team@minml.ai"}
 ]
-keywords = ["llm", "compression", "nlp", "ai", "tokenizer"]
+keywords = ["llm", "compression", "nlp", "ai", "rust", "pyo3", "gpt-oss"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Rust",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-requires-python = ">=3.9"
 dependencies = [
     "fastapi>=0.104.1",
     "uvicorn[standard]>=0.24.0",
@@ -50,6 +54,7 @@ dev = [
     "flake8>=6.1.0",
     "mypy>=1.7.0",
     "pre-commit>=3.5.0",
+    "maturin>=1.0,<2.0",
 ]
 security = [
     "bandit>=1.7.5",
@@ -61,22 +66,24 @@ monitoring = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/minimal-ai/compression"
-Documentation = "https://github.com/minimal-ai/compression#readme"
-Repository = "https://github.com/minimal-ai/compression.git"
-"Bug Tracker" = "https://github.com/minimal-ai/compression/issues"
+Homepage = "https://github.com/minml/minml"
+Documentation = "https://github.com/minml/minml#readme"
+Repository = "https://github.com/minml/minml.git"
+"Bug Tracker" = "https://github.com/minml/minml/issues"
+"PyPI" = "https://pypi.org/project/minml/"
 
 [project.scripts]
-minimal-train = "tokenizer.trainer:main"
-minimal-evaluate = "examples.evaluate_savings:main"
-minimal-demo = "examples.compress_and_query:main"
+minml-train = "tokenizer.trainer:main"
+minml-evaluate = "examples.evaluate_savings:main"
+minml-demo = "examples.compress_and_query:main"
+minml-gpt-test = "examples.test_gpt_oss_integration:main"
 
 [tool.setuptools.packages.find]
-include = ["compression*", "tokenizer*", "middleware*"]
+include = ["compression*", "tokenizer*", "middleware*", "minml*"]
 
 [tool.black]
 line-length = 100
-target-version = ["py39", "py310", "py311"]
+target-version = ["py39", "py310", "py311", "py312", "py313"]
 include = '\.pyi?$'
 extend-exclude = '''
 /(
