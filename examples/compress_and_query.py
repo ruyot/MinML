@@ -157,7 +157,7 @@ async def query_local_model(prompt: str, model_url: str = "http://localhost:8001
         }
 
 
-async def demonstrate_llm_querying(pipeline: CompressionPipeline, prompt: str, use_compression: bool = True):
+async def demonstrate_llm_querying(pipeline: CompressionPipeline, prompt: str, use_compression: bool = True, model: str = "gpt-3.5-turbo"):
     """Demonstrate LLM querying with and without compression."""
     print(f"\n{'='*60}")
     print("LLM QUERYING DEMONSTRATION")
@@ -178,7 +178,7 @@ async def demonstrate_llm_querying(pipeline: CompressionPipeline, prompt: str, u
     print(f"Querying LLM with {'compressed' if use_compression else 'original'} prompt...")
     
     # Try OpenAI first, then local model
-    result = await query_openai_api(compressed_prompt)
+    result = await query_openai_api(compressed_prompt, model=model)
     
     if result['model'] == 'mock' or result['model'] == 'error':
         print("Trying local model...")
@@ -231,6 +231,8 @@ async def main():
     parser.add_argument("--no-llm", action="store_true",
                         help="Skip LLM querying demonstration")
     parser.add_argument("--prompt", help="Custom prompt to use")
+    parser.add_argument("--model", help="Model to query (e.g., gpt-5, gpt-4o)", default="gpt-3.5-turbo")
+    parser.add_argument("--interactive", action="store_true", help="Prompt for input interactively")
     
     args = parser.parse_args()
     
@@ -245,7 +247,15 @@ async def main():
         "What are the best practices for prompt engineering with large language models like GPT-4? Please provide specific techniques, examples, and common pitfalls to avoid."
     ]
     
-    prompt = args.prompt or sample_prompts[0]
+    if args.interactive and not args.prompt:
+        try:
+            prompt = input("Enter your prompt: ")
+        except EOFError:
+            prompt = ""
+        if not prompt:
+            prompt = sample_prompts[0]
+    else:
+        prompt = args.prompt or sample_prompts[0]
     
     # Compression demonstration
     if not args.no_compression:
@@ -265,13 +275,13 @@ async def main():
     
     # LLM querying demonstration
     if not args.no_llm:
-        await demonstrate_llm_querying(pipeline, prompt, use_compression=True)
+        await demonstrate_llm_querying(pipeline, prompt, use_compression=True, model=args.model)
         
         # Compare with uncompressed
         print(f"\n{'='*60}")
         print("COMPARISON: WITHOUT COMPRESSION")
         print(f"{'='*60}")
-        await demonstrate_llm_querying(pipeline, prompt, use_compression=False)
+        await demonstrate_llm_querying(pipeline, prompt, use_compression=False, model=args.model)
     
     print(f"\n{'='*60}")
     print("DEMONSTRATION COMPLETE")
