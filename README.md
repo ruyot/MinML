@@ -246,7 +246,7 @@ curl -X POST "http://localhost:8000/compress-with-stats" \
   }'
 ```
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 ### Multi-Stage Build (Rust + Python)
 
@@ -321,7 +321,7 @@ docker-compose up -d
    - **Up to 76% token reduction**
    - Automatic backoff if compression increases size
 
-## 📊 Performance Metrics
+## Performance Metrics
 
 ### Current Results (20 Test Prompts)
 
@@ -360,7 +360,7 @@ Cost savings: 47.58% ($0.00256 per 20 prompts)
 ============================================================
 ```
 
-## 🧪 Testing & Quality
+## Testing & Quality
 
 ```bash
 # Run all tests (27/27 passing)
@@ -381,36 +381,12 @@ pytest examples/test_gpt_oss_integration.py -v
 ```
 
 ### Test Coverage
-- ✅ **27/27 tests passing**
-- ✅ **Rust core functionality tested**
-- ✅ **Python fallback compatibility verified**
-- ✅ **Monotonic compression guarantees tested**
-- ✅ **GPT-OSS 20B integration tested**
-- ✅ **Cross-platform compatibility (Windows/Linux/macOS)**
-
-## 🤝 Contributing
-
-### Development Setup
-
-1. **Fork and clone the repository**
-   ```bash
-   git clone <your-fork-url>
-   cd minml
-   ```
-
-2. **Install development dependencies**
-   ```bash
-   pip install -e ".[dev]"
-   # Build Rust extension for development
-   cd crates/minml_rs && maturin develop --release && cd ../..
-   ```
-
-3. **Run tests and linting**
-   ```bash
-   pytest
-   black . && isort .
-   flake8 compression/ minml/
-   ```
+- **27/27 tests passing**
+- **Rust core functionality tested**
+- **Python fallback compatibility verified**
+- **Monotonic compression guarantees tested**
+- **GPT-OSS 20B integration tested**
+- **Cross-platform compatibility (Windows/Linux/macOS)**
 
 ### Development Workflow
 
@@ -451,9 +427,9 @@ pytest examples/test_gpt_oss_integration.py -v
 - **Testing**: Rust functions are tested through Python integration tests
 - **Dependencies**: Minimal dependencies (regex, once_cell, pyo3)
 
-## 📈 Roadmap
+## Roadmap
 
-### ✅ Completed (v1.0)
+### Completed (v1.0)
 - [x] Rust-powered compression core (PyO3)
 - [x] GPT-OSS 20B semantic analysis integration
 - [x] Monotonic compression levels (L3 ≤ L2 ≤ L1 ≤ original)
@@ -462,12 +438,12 @@ pytest examples/test_gpt_oss_integration.py -v
 - [x] Tail folding for shared phrases ("machine/deep learning")
 - [x] 27/27 tests passing with comprehensive coverage
 
-### 🔄 In Progress
+### In Progress
 - [ ] WebAssembly support for browser-based compression
 - [ ] Real-time compression metrics dashboard
 - [ ] Advanced semantic compression using embeddings
 
-### 🔮 Future Plans
+### Future Plans
 - [ ] Support for additional local model formats (GGML, ONNX)
 - [ ] Batch processing API for high-throughput applications
 - [ ] Integration with LangChain, LlamaIndex, and other LLM frameworks
@@ -475,32 +451,17 @@ pytest examples/test_gpt_oss_integration.py -v
 - [ ] Distributed compression for large-scale applications
 - [ ] Mobile app with Tauri (Rust + web frontend)
 
-## 📄 License
+## License
 
 This project is licensed under the View Only License - see the LICENSE file for details.
 
 **View Only License Terms:**
-- ✅ **Viewing**: You may view and read the source code
-- ❌ **Usage**: You may not use, modify, or distribute this software
-- ❌ **Commercial Use**: Commercial usage is strictly prohibited
-- ❌ **Modification**: No modifications or derivative works allowed
-- ❌ **Distribution**: No redistribution in any form
-
-For commercial licensing or usage permissions, please contact the MinML team.
-
-## 🙏 Acknowledgments
-
-- **Rust Community**: For the amazing PyO3 ecosystem
-- **Hugging Face**: For transformers and model hosting
-- **OpenAI**: For GPT-OSS model architecture
-- **Python Community**: For the comprehensive ML ecosystem
-
-## 📞 Contact
-
-For licensing inquiries, commercial partnerships, or questions about MinML:
-- **Email**: team@minml.ai
-- **GitHub**: [MinML Organization](https://github.com/minml)
+- **Viewing**: You may view and read the source code
+- **Usage**: You may not use, modify, or distribute this software
+- **Commercial Use**: Commercial usage is strictly prohibited
+- **Modification**: No modifications or derivative works allowed
+- **Distribution**: No redistribution in any form
 
 ---
 
-**MinML** - High-performance semantic compression with enterprise-grade restrictions ⚡🤖 
+**MinML** - High-performance semantic compression with enterprise-grade restrictions
