@@ -126,10 +126,8 @@ minml/
 │   ├── trainer.py        # BPE tokenizer training
 │   └── tokenizer_utils.py
 ├── examples/              # Usage examples
-│   ├── compress_and_query.py
-│   ├── evaluate_savings.py
-│   ├── test_gpt_oss_integration.py
-│   └── test_level3_analysis.py
+│   ├── openai_compare.py
+│   └── evaluate_savings.py
 ├── tests/                 # Test suite (27/27 passing)
 │   ├── __init__.py
 │   ├── test_compression.py
@@ -340,8 +338,8 @@ python examples/evaluate_savings.py --compression-level 2 --detailed
 # Compare all compression levels
 python examples/evaluate_savings.py --detailed
 
-# Test GPT-OSS semantic analysis
-python examples/test_gpt_oss_integration.py
+# Compare prompts with OpenAI (real API key)
+python -m examples.openai_compare --dotenv --prompt "Explain X"
 
 # Benchmark compression performance
 python scripts/benchmark.py
@@ -376,8 +374,8 @@ pytest tests/test_middleware.py -v
 # Test Rust extension specifically
 python -c "from minml.rs_bridge import stopword_remove; print('Rust: OK')"
 
-# Integration tests with GPT-OSS
-pytest examples/test_gpt_oss_integration.py -v
+# Compare prompts with OpenAI (CLI entry)
+minml-demo --dotenv --prompt "Explain X"
 ```
 
 ### Test Coverage

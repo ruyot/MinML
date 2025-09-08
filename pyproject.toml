@@ -76,8 +76,7 @@ Repository = "https://github.com/minml/minml.git"
 [project.scripts]
 minml-train = "tokenizer.trainer:main"
 minml-evaluate = "examples.evaluate_savings:main"
-minml-demo = "examples.compress_and_query:main"
-minml-gpt-test = "examples.test_gpt_oss_integration:main"
+minml-demo = "examples.openai_compare:main"
 
 [tool.setuptools.packages.find]
 include = ["compression*", "tokenizer*", "middleware*", "minml*"]
