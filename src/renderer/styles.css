@@ -1,0 +1,23 @@
+*{box-sizing:border-box}
+.wrap{max-width:900px;margin:0 auto;padding:32px}
+header{margin:24px 0 8px}
+h1{font-size:36px;margin:0;color:#fff;letter-spacing:0.5px}
+.subtitle{color:#bbb;margin:4px 0 0}
+.toggleCard{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:16px;padding:20px;margin:20px 0}
+.toggleRow{display:flex;align-items:center;justify-content:space-between}
+.label{color:#fff;font-size:18px}
+.toggle{width:80px;height:40px;border-radius:40px;border:1px solid #333;background:#111;position:relative;cursor:pointer;transition:all .2s}
+.toggle .dot{position:absolute;top:4px;left:4px;width:32px;height:32px;border-radius:50%;background:#fff;transition:left .2s}
+.toggle.on{background:#fff;border-color:#fff}
+.toggle.on .dot{left:44px;background:#000}
+.hint{color:#999;margin-top:12px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+.metric{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:16px;padding:20px}
+.metric .kpi{font-size:36px;color:#fff}
+.metric .label{color:#bbb}
+.metric .sub{color:#888;margin-top:6px}
+.setup{background:#050505;border:1px solid #141414;border-radius:16px;padding:20px}
+.setup h2{color:#fff;margin:0 0 12px}
+.setup li{color:#ccc;margin:8px 0}
+code{background:#111;border:1px solid #222;padding:2px 6px;border-radius:8px;color:#fff}
+footer{color:#777;margin-top:24px;text-align:center}
