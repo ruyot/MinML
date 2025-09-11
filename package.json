@@ -1,0 +1,64 @@
+{
+  "name": "minml",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MinML — local, model-agnostic token-reduction proxy with Electron UI",
+  "main": "dist/main/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k \"pnpm:dev:main\" \"pnpm:dev:renderer\"",
+    "dev:main": "tsc -w --preserveWatchOutput",
+    "dev:renderer": "vite",
+    "start": "electron .",
+    "build": "tsc && vite build && electron-builder",
+    "build:mac": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "postinstall": "echo \"Tip: if tiktoken fails to load WASM at runtime, we fallback to char/4 estimator.\""
+  },
+  "build": {
+    "appId": "com.minml.desktop",
+    "productName": "MinML",
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ]
+    },
+    "extraResources": []
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.12",
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.3.0",
+    "concurrently": "^9.0.0",
+    "esbuild": "^0.23.0",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.2"
+  },
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "^31.3.0",
+    "electron-builder": "^24.13.3",
+    "electron-store": "^8.2.0",
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tiktoken": "^1.0.22",
+    "zod": "^3.23.8"
+  }
+}
